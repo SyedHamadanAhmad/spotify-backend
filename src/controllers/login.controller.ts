@@ -19,7 +19,7 @@ export const handleLogin: RequestHandler = async (req, res) => {
             redirect_uri: redirectUri
           });
           try {
-            const response = await fetch(url, {
+            const tokenResponse = await fetch(url, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -28,18 +28,34 @@ export const handleLogin: RequestHandler = async (req, res) => {
             });
           
             // Parse the response to JSON
-            const responseData = await response.json();
-            if (responseData.access_token && responseData.refresh_token) {
-                const { access_token, refresh_token } = responseData;
+            const tokenData = await tokenResponse.json();
+            if (tokenData.access_token && tokenData.refresh_token) {
+                const { access_token, refresh_token } = tokenData;
+                const  userResponse= await fetch("https://api.spotify.com/v1/me", {
+                  method:'GET',
+                  headers:{
+                    "Authorization": `Bearer ${access_token}`
+                  }
+                })
+                const userData=await userResponse.json();
+                if(userData){
+                  const user_id=userData.id;
+                  const user_name=userData.display_name
+                  const user_img = userData.images?.[0]?.url || ''; // Extract first image URL or default to empty string
+                  // console.log("User data received", userData)
+                  // Call the upsert function to either insert or update the tokens in the database
+                  const tokens = await upsertToken(user_id, user_name, access_token, refresh_token);
+                  res.status(200).json({
+                    message: 'Tokens processed successfully',
+                    tokens: tokens,
+                    user:userData
+                });
+                }
 
-                // Call the upsert function to either insert or update the tokens in the database
-                const user = await upsertToken(code, access_token, refresh_token);
+                
 
                 // Send the response with the user data and tokens
-                res.status(200).json({
-                    message: 'Tokens processed successfully',
-                    user: user // You can send back the user data or other relevant info
-                });
+               
             } else {
                 // If no access token or refresh token, respond with an error
                 res.status(400).json({

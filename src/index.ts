@@ -2,12 +2,23 @@ import express, { Request } from "express";
 import pool from "./connection";
 import {loginRouter} from './routes/login.routes';
 import { logoutRouter } from "./routes/logout.routes";
+import { userRouter } from "./routes/users.routes";
 import cors from "cors";
 
 const app: express.Application = express()
 
-app.use(cors({ origin: 'http://localhost:5173' }));
-app.use(express.json()); // Middleware to parse JSON bodies
+const allowedOrigins = [
+    'http://localhost:5173',  // Local development environment
+    'https://spotify-frontend-flax.vercel.app',  // Vercel production environment
+  ];
+  
+  app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,  // Allow cookies or other credentials to be sent
+  }));
+
+
+  app.use(express.json()); // Middleware to parse JSON bodies
 
 const port = process.env.PORT || 3000;
 
@@ -19,6 +30,7 @@ app.get('/', (req, res)=>{
 
 app.use('/login', loginRouter)
 app.use('/logout', logoutRouter)
+app.use('/user', userRouter)
 app.listen(port, async ()=>{
     try{
         await pool.connect()

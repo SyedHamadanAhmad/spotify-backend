@@ -1,9 +1,12 @@
 import {Request, Response} from 'express'
-import { removeTokens } from '../models/user.model';
+import { logout } from '../models/user.model';
 export const handleLogout = async(req:Request, res:Response)=>{
     try{
-        const accessToken=req.body.accessToken
-        const response=await removeTokens(accessToken);
+        const user_id=req.body.user_id
+        console.log("Request body:", req.body);
+
+        console.log("in /logout endpoint:", user_id)
+        const response=await logout(user_id);
         if(response){
             console.log("Logout")
             res.json("Successfully logged out")
