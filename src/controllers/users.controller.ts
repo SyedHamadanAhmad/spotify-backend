@@ -54,6 +54,49 @@ const getFollowers = async (user_id: string, authToken: string) => {
 };
 
 
+const getListeningTime= async (authToken:string)=>{
+    try{
+        let totalListeningTime = 0;
+        let hasMoreData = true;
+        let timestamp=Date.now()  - ( 7 * 24 * 60 * 60 * 1000);
+        while(hasMoreData){
+            const response=await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${timestamp}`, {
+                headers:{
+                    "Authorization": `Bearer ${authToken}`
+                }
+            });
+            if(response.ok){
+                const data= await response.json();
+                const tracks = data.items;
+                tracks.forEach((item:any) => {
+                    totalListeningTime += item.track.duration_ms;
+                  });
+                  if (tracks.length < 50) {
+                    hasMoreData = false;
+                  } else {
+                    timestamp = new Date(tracks[tracks.length - 1].played_at).getTime();
+                  }
+                  const hours = Math.floor(totalListeningTime / (1000 * 60 * 60));
+                    const minutes = Math.floor((totalListeningTime % (1000 * 60 * 60)) / (1000 * 60));
+
+                    
+                    return {hours, minutes}
+            }
+        }
+       
+    }
+    catch(err){
+        if(err instanceof Error){
+            console.log("Error getting listening time: ", err.message);
+            throw err;
+        }
+        else{
+            console.log("Unknown server error: ", err)
+            throw err;
+        }
+    }
+}
+
 export const getUserData = async (req: Request, res: Response): Promise<void> => {
     try {
         const user_id = req.body.user_id;
@@ -94,11 +137,13 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
             track_id: recommendedSongDetails.id,
             preview_url:recommendedSongDetails.preview_url
         };
-       
+        
+        const listeningTime=await getListeningTime(authToken)
         
         res.status(200).json({
             lastPlayed,
             recommendedSong,
+            listeningTime,
             followers
         });
     } catch (err: any) {
