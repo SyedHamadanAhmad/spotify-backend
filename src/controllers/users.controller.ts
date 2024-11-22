@@ -97,6 +97,9 @@ const getListeningTime= async (authToken:string)=>{
     }
 }
 
+
+
+
 export const getUserData = async (req: Request, res: Response): Promise<void> => {
     try {
         const user_id = req.body.user_id;
@@ -152,3 +155,50 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+
+export const getTopItems=async(req:Request, res:Response)=>{
+    try{
+        const time_range=req.body.time_range;
+        const item=req.body.item;
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+            res.status(401).json({ error: "Authorization header is missing" });
+            return;
+        }
+        
+        const authToken = authHeader.split(' ')[1];
+       
+    
+        if (!authToken) {
+            res.status(401).json({ error: "Invalid authorization header format" });
+            return;
+        }
+
+        const response = await fetch(`https://api.spotify.com/v1/me/top/${item}?time_range=${time_range}&limit=10`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${authToken}`,
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            
+            res.status(200).json(data.items); // Send data back to the client
+        } else {
+            const errorData = await response.json(); // Await the response body
+            console.error("Spotify API error:", errorData);
+            res.status(response.status).json(errorData); // Forward Spotify's error
+        }
+    }
+    catch(err){
+        if(err instanceof Error){
+            console.log("Error getting top item: ", err.message)
+            throw err.message
+        }
+        else{
+            console.log("Unknown server error: ", err)
+            throw err;
+        }
+    }
+}

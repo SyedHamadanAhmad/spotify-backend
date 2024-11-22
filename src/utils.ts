@@ -22,6 +22,7 @@ export interface songFeatures{
 
   export const getTrackFeatures = async (track_id:string, authToken:string)=>{
     try{
+        
         const response= await fetch(`https://api.spotify.com/v1/audio-features/${track_id}`, {
             method:"GET",
             headers:{
