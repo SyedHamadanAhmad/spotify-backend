@@ -122,7 +122,7 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         const followers = await getFollowers(user_id, authToken);
         const track_id=lastPlayed?.track_id
         const trackFeatures=await getTrackFeatures(track_id, authToken)
-        const recommendations=await getRecommendations(track_id, trackFeatures, authToken)
+        const recommendations=await getRecommendations(1, track_id, authToken, trackFeatures)
         
         let recommendedSongDetails;
         for (let i = 0; i < recommendations.tracks.length; i++) {
