@@ -14,6 +14,7 @@ const getLastPlayed = async (authToken: string) => {
 
         if (response1.ok) {
             const data1 = await response1.json();
+            console.log("Track id in last played function: ", data1.items[0].track.id)
             return {
                 name: data1.items[0]?.track.name,
                 artist: data1.items[0]?.track.artists?.map((artist: any) => artist.name).join(', '),
@@ -121,7 +122,7 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         const followers = await getFollowers(user_id, authToken);
         const track_id=lastPlayed?.track_id
         const trackFeatures=await getTrackFeatures(track_id, authToken)
-        const recommendations=await getRecommendations(trackFeatures, authToken)
+        const recommendations=await getRecommendations(track_id, trackFeatures, authToken)
         
         let recommendedSongDetails;
         for (let i = 0; i < recommendations.tracks.length; i++) {

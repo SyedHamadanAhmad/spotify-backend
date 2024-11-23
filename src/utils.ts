@@ -20,9 +20,11 @@ export interface songFeatures{
   }
 
 
+
+
   export const getTrackFeatures = async (track_id:string, authToken:string)=>{
     try{
-        
+        console.log("Track id in getTrackFeatures: ",track_id)
         const response= await fetch(`https://api.spotify.com/v1/audio-features/${track_id}`, {
             method:"GET",
             headers:{
@@ -33,7 +35,7 @@ export interface songFeatures{
             const data= await response.json();
             return data;
         }
-        else console.log("Error getting track features")
+        
     }
     catch(err){
         if(err instanceof Error){
@@ -48,28 +50,44 @@ export interface songFeatures{
 }
 
 
-export const getRecommendations = async (features:songFeatures, authToken:string)=>{
+export const getRecommendations = async (track_id:string, features:songFeatures, authToken:string)=>{
     try{
-        const queryParams = new URLSearchParams({
-            limit:'3',
-            seed_tracks: features.id, // Using the current track as the seed
-            target_danceability: features.danceability.toString(),
-            target_energy: features.energy.toString(),
-            target_valence: features.valence.toString(),
-            target_tempo: features.tempo.toString(),
-        });
-
-        const response=await fetch(`https://api.spotify.com/v1/recommendations?${queryParams.toString()}`, {
-            method:"GET",
-            headers:{
-                "Authorization": `Bearer ${authToken}`
+        if(features){
+            console.log("Features found")
+            const queryParams = new URLSearchParams({
+                limit:'3',
+                seed_tracks: features.id, // Using the current track as the seed
+                target_danceability: features.danceability.toString(),
+                target_energy: features.energy.toString(),
+                target_valence: features.valence.toString(),
+                target_tempo: features.tempo.toString(),
+            });
+    
+            const response=await fetch(`https://api.spotify.com/v1/recommendations?${queryParams.toString()}`, {
+                method:"GET",
+                headers:{
+                    "Authorization": `Bearer ${authToken}`
+                }
+            })
+    
+            if(response.ok){
+                const data=await response.json();
+                return data;
             }
-        })
-
-        if(response.ok){
-            const data=await response.json();
-            return data;
         }
+        else{
+            const response=await fetch(`https://api.spotify.com/v1/recommendations?limit=1&seed_tracks=${track_id}`, {
+                method:"GET",
+                headers:{
+                    "Authorization": `Bearer ${authToken}`
+                }
+            })
+            if(response.ok){
+                const data=await response.json();
+                return data;
+            }
+        }
+        
     }
     catch(err){
         if(err instanceof Error){
