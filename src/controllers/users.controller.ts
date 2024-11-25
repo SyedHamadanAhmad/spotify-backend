@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { songFeatures, getTrackFeatures, getRecommendations } from "../utils";
+import {  getRecommendations } from "../utils";
 const getLastPlayed = async (authToken: string) => {
     try {
         const timestamp=Date.now() ;
@@ -59,7 +59,16 @@ const getListeningTime= async (authToken:string)=>{
     try{
         let totalListeningTime = 0;
         let hasMoreData = true;
-        let timestamp=Date.now()  - ( 7 * 24 * 60 * 60 * 1000);
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const daysSinceMonday = (dayOfWeek + 6) % 7; // Adjust for Monday being the start of the week
+        const lastMonday = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - daysSinceMonday,
+            0, 0, 0, 0
+            );
+    let timestamp = lastMonday.getTime();
         while(hasMoreData){
             const response=await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${timestamp}`, {
                 headers:{
@@ -121,8 +130,8 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         const lastPlayed = await getLastPlayed(authToken);
         const followers = await getFollowers(user_id, authToken);
         const track_id=lastPlayed?.track_id
-        const trackFeatures=await getTrackFeatures(track_id, authToken)
-        const recommendations=await getRecommendations(1, track_id, authToken, trackFeatures)
+        // const trackFeatures=await getTrackFeatures(track_id, authToken)
+        const recommendations=await getRecommendations(1, track_id, authToken)
         
         let recommendedSongDetails;
         for (let i = 0; i < recommendations.tracks.length; i++) {

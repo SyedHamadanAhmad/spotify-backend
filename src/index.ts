@@ -4,6 +4,7 @@ import {loginRouter} from './routes/login.routes';
 import { logoutRouter } from "./routes/logout.routes";
 import { userRouter } from "./routes/users.routes";
 import { songsRouter } from "./routes/songs.routes";
+import { playlistRouter } from "./routes/playlists.routes";
 import cors from "cors";
 
 const app: express.Application = express()
@@ -33,6 +34,7 @@ app.use('/login', loginRouter)
 app.use('/logout', logoutRouter)
 app.use('/user', userRouter)
 app.use('/songs', songsRouter)
+app.use('/playlists', playlistRouter)
 app.listen(port, async ()=>{
     try{
         await pool.connect()

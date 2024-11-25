@@ -25,6 +25,7 @@ export const getSongs=async(req:Request, res:Response): Promise<void>=>{
                 track_id:songs[i].id,
                 album:songs[i].album.name,
                 img:songs[i].album.images[0].url,
+                artist: songs[i].artists.map((artist: { name: string }) => artist.name).join(", "),
                 preview_url:songs[i].preview_url
 
             }
@@ -74,9 +75,11 @@ export const recommendSong=async(req:Request, res:Response)=>{
                 track_id:songs.tracks[i].id,
                 album:songs.tracks[i].album.name,
                 img:songs.tracks[i].album.images[0].url,
+                artist: songs.tracks[i].artists.map((artist: { name: string }) => artist.name).join(", "),
                 preview_url:songs.tracks[i].preview_url
 
             }
+           
             response.push(song)
         }
         
