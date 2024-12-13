@@ -59,56 +59,119 @@ export interface songData{
 }
 
 
-export const getRecommendations = async (limit:number, track_id:string, authToken:string, features?:songFeatures)=>{
-    try{
-        if(features){
-            console.log("Features found")
-            const queryParams = new URLSearchParams({
-                limit:limit.toString(),
-                seed_tracks: features.id, // Using the current track as the seed
-                target_danceability: features.danceability.toString(),
-                target_energy: features.energy.toString(),
-                target_valence: features.valence.toString(),
-                target_tempo: features.tempo.toString(),
-            });
-    
-            const response=await fetch(`https://api.spotify.com/v1/recommendations?${queryParams.toString()}`, {
-                method:"GET",
-                headers:{
-                    "Authorization": `Bearer ${authToken}`
-                }
-            })
-    
-            if(response.ok){
-                const data=await response.json();
-                return data;
-            }
-        }
-        else{
-            const response=await fetch(`https://api.spotify.com/v1/recommendations?limit=${limit}&seed_tracks=${track_id}`, {
-                method:"GET",
-                headers:{
-                    "Authorization": `Bearer ${authToken}`
-                }
-            })
-            if(response.ok){
-                const data=await response.json();
-                return data;
-            }
-        }
+export const getRecommendations = async (
+    limit: number,
+    track_name: string,
+    artist_name: string,
+    authToken: string
+  ) => {
+    try {
+      const LASTFM_API_BASE = "https://ws.audioscrobbler.com/2.0/";
+      const LASTFM_API_KEY =
+        process.env.LASTFM_API_KEY || "b249c0d8d57a523d8e8be50c76151008";
+  
+      // Fetch similar tracks
+      const response = await fetch(
+        `${LASTFM_API_BASE}?method=track.getSimilar&artist=${artist_name}&track=${track_name}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1&limit=${limit}`
+      );
+  
+      const data = await response.json();
+      console.log("Similar Song Data in getRecommendations: ", data);
+  
+      // If the track list is empty, fetch top tracks from the same artist
+      if (data.similartracks?.track?.length === 0) {
+        console.log(`No similar tracks found for "${track_name}". Fetching top tracks for artist "${artist_name}".`);
+  
+        const fallbackResponse = await fetch(
+          `${LASTFM_API_BASE}?method=artist.getTopTracks&artist=${artist_name}&api_key=${LASTFM_API_KEY}&format=json&limit=${limit}`
+        );
+  
+        const fallbackData = await fallbackResponse.json();
+  
+        // Ensure the result matches the limit
+        const topTracks = fallbackData.toptracks?.track.slice(0, limit) || [];
         
+        // Fetch Spotify data for each track
+        const spotifyTracks = await Promise.all(
+          topTracks.map((track:any) => findSongs(track.name, authToken))
+        );
+  
+        return spotifyTracks.flat();
+      }
+  
+      // If similar tracks are found, fetch Spotify data for each
+      const similarTracks = data.similartracks.track.slice(0, limit);
+      const spotifyTracks = await Promise.all(
+        similarTracks.map((track:any) => findSongs(track.name, authToken))
+      );
+  
+      return spotifyTracks.flat();
+    } catch (err) {
+      if (err instanceof Error) {
+        console.log("Error getting Recommendations from Last.fm", err.message);
+        throw err.message;
+      } else {
+        console.log("Unknown Server Error getting Recommendations from Last.fm", err);
+        throw err;
+      }
     }
-    catch(err){
-        if(err instanceof Error){
-            console.log("Error getting track Recommendations: ", err.message)
-            throw err.message;
-        }
-        else{
-            console.log("Unknown server error: ", err)
-            throw err;
-        }
-    }
-}
+  };
+  
+
+// export const getRecommendations = async (limit:number, track_id:string, authToken:string, features?:songFeatures)=>{
+//     try{
+//         if(features){
+//             console.log("Features found")
+//             const queryParams = new URLSearchParams({
+//                 limit:limit.toString(),
+//                 seed_tracks: features.id, // Using the current track as the seed
+//                 target_danceability: features.danceability.toString(),
+//                 target_energy: features.energy.toString(),
+//                 target_valence: features.valence.toString(),
+//                 target_tempo: features.tempo.toString(),
+//             });
+    
+//             const response=await fetch(`https://api.spotify.com/v1/recommendations?${queryParams.toString()}`, {
+//                 method:"GET",
+//                 headers:{
+//                     "Authorization": `Bearer ${authToken}`
+//                 }
+//             })
+    
+//             if(response.ok){
+//                 const data=await response.json();
+//                 return data;
+//             }
+//         }
+//         else{
+//             const response=await fetch(`https://api.spotify.com/v1/recommendations?limit=${limit}&seed_tracks=${track_id}`, {
+//                 method:"GET",
+//                 headers:{
+//                     "Authorization": `Bearer ${authToken}`
+//                 }
+//             })
+//             if(response.ok){
+//                 const data=await response.json();
+//                 return data;
+//             }
+//             else{
+//                 const e=await response.json();
+//                 console.log("Error in getting recommendations from spotify API: ", e)
+//             }
+//         }
+        
+//     }
+//     catch(err){
+//         if(err instanceof Error){
+//             console.log("Error getting track Recommendations: ", err.message)
+//             throw err.message;
+//         }
+//         else{
+//             console.log("Unknown server error: ", err)
+//             throw err;
+//         }
+//     }
+// }
 
 export const findSongs = async (trackName: string, authToken: string) => {
     try {

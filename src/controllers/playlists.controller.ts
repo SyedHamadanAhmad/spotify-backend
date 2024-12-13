@@ -1,7 +1,6 @@
 import { Request, Response } from "express"
 import { createPlaylist, addSongstoPlaylist } from "../utils"
 
-
 export const createPlaylistController = async (req:Request, res:Response)=>{
     try{
 
@@ -52,3 +51,4 @@ export const createPlaylistController = async (req:Request, res:Response)=>{
         }
     }
 }
+

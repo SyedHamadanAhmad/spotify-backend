@@ -14,7 +14,7 @@ const getLastPlayed = async (authToken: string) => {
 
         if (response1.ok) {
             const data1 = await response1.json();
-            console.log("Track id in last played function: ", data1.items[0].track.id)
+           
             return {
                 name: data1.items[0]?.track.name,
                 artist: data1.items[0]?.track.artists?.map((artist: any) => artist.name).join(', '),
@@ -114,7 +114,7 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
     try {
         const user_id = req.body.user_id;
         const authHeader = req.headers.authorization;
-
+        
         if (!authHeader) {
             res.status(401).json({ error: "Authorization header is missing" });
             return;
@@ -128,19 +128,26 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         }
 
         const lastPlayed = await getLastPlayed(authToken);
+        
         const followers = await getFollowers(user_id, authToken);
+        
         const track_id=lastPlayed?.track_id
-        // const trackFeatures=await getTrackFeatures(track_id, authToken)
-        const recommendations=await getRecommendations(1, track_id, authToken)
+        const track_name=lastPlayed?.name
+        const firstArtist = lastPlayed?.artist.split(',')[0].trim();
+        
+       
+        const recommendations = await getRecommendations(1, track_name, firstArtist, authToken);
+       
         
         let recommendedSongDetails;
-        for (let i = 0; i < recommendations.tracks.length; i++) {
-            if (recommendations.tracks[i].id !== track_id) {
-                recommendedSongDetails = recommendations.tracks[i];
+        for (let i = 0; i < recommendations.length; i++) {
+            if (recommendations[i].id !== track_id) {
+                recommendedSongDetails = recommendations[i];
                 break; // Exit the loop once you find a recommendation
             }
         }
-
+        
+        
         let recommendedSong = {
             name: recommendedSongDetails.name,
             artist: recommendedSongDetails.artists?.map((artist: any) => artist.name).join(', '),
@@ -150,7 +157,7 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
             track_id: recommendedSongDetails.id,
             preview_url:recommendedSongDetails.preview_url
         };
-        
+       
         const listeningTime=await getListeningTime(authToken)
         
         res.status(200).json({

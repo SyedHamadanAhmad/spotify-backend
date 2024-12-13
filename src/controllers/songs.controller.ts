@@ -51,7 +51,9 @@ export const getSongs=async(req:Request, res:Response): Promise<void>=>{
 
 export const recommendSong=async(req:Request, res:Response)=>{
     try{
-        const track_id=req.params.track_id
+        const track_name=req.params.track_name;
+        const artist_name=req.params.artist_name
+        
         const authHeader = req.headers.authorization;
 
         if (!authHeader) {
@@ -66,25 +68,25 @@ export const recommendSong=async(req:Request, res:Response)=>{
             return;
         }
 
-        const songs=await getRecommendations(10, track_id, authToken);
+        const songs=await getRecommendations(10, track_name,"oogabooga", authToken);
         
-        let response:songData[]=[]
-        for(let i=0; i<songs.tracks.length; i++){
-            var song:songData={
-                track_name:songs.tracks[i].name,
-                track_id:songs.tracks[i].id,
-                album:songs.tracks[i].album.name,
-                img:songs.tracks[i].album.images[0].url,
-                artist: songs.tracks[i].artists.map((artist: { name: string }) => artist.name).join(", "),
-                preview_url:songs.tracks[i].preview_url
+        // let response:songData[]=[]
+        // for(let i=0; i<songs.tracks.length; i++){
+        //     var song:songData={
+        //         track_name:songs.tracks[i].name,
+        //         track_id:songs.tracks[i].id,
+        //         album:songs.tracks[i].album.name,
+        //         img:songs.tracks[i].album.images[0].url,
+        //         artist: songs.tracks[i].artists.map((artist: { name: string }) => artist.name).join(", "),
+        //         preview_url:songs.tracks[i].preview_url
 
-            }
+        //     }
            
-            response.push(song)
-        }
+        //     response.push(song)
+        // }
         
         res.status(200).json({
-            recommendations:response
+            recommendations:"response"
         })
     }
     catch(err){

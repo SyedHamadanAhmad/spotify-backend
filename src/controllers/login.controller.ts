@@ -30,13 +30,14 @@ export const handleLogin: RequestHandler = async (req, res) => {
             // Parse the response to JSON
             const tokenData = await tokenResponse.json();
             if (tokenData.access_token && tokenData.refresh_token) {
-                const { access_token, refresh_token } = tokenData;
+                const { access_token, refresh_token, expires_in } = tokenData;
                 const  userResponse= await fetch("https://api.spotify.com/v1/me", {
                   method:'GET',
                   headers:{
                     "Authorization": `Bearer ${access_token}`
                   }
                 })
+                const expiresAt = Date.now() + (expires_in * 1000)
                 const userData=await userResponse.json();
                 if(userData){
                   const user_id=userData.id;
@@ -48,7 +49,8 @@ export const handleLogin: RequestHandler = async (req, res) => {
                   res.status(200).json({
                     message: 'Tokens processed successfully',
                     tokens: tokens,
-                    user:userData
+                    user:userData,
+                    expires_at:expiresAt
                 });
                 }
 

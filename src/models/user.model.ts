@@ -61,3 +61,23 @@ export const upsertToken = async (user_id: string, user_name:string, access_toke
         }
     }
 };
+
+export const findRefreshToken=async(access_token:string | undefined)=>{
+    try{
+        const query=`SELECT refresh_token FROM users WHERE access_token=$1;`
+        const results=await pool.query(query, [access_token]);
+        if(results.rowCount && results.rowCount>0){
+            return results
+        }
+
+    }
+    catch (err) {
+        if (err instanceof Error) {
+            console.error("Error in finding Refresh token: ", err.message);
+            throw new Error(`Error in finding Refresh token: ${err.message}`);
+        } else {
+            console.error("Unknown error in finding Refresh token: ", err);
+            throw new Error("Unknown error in finding Refresh token");
+        }
+    }
+}
