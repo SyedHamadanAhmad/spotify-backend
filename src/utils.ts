@@ -78,31 +78,42 @@ export const getRecommendations = async (
       const data = await response.json();
       console.log("Similar Song Data in getRecommendations: ", data);
   
-      // If the track list is empty, fetch top tracks from the same artist
+      let tracks = [];
       if (data.similartracks?.track?.length === 0) {
-        console.log(`No similar tracks found for "${track_name}". Fetching top tracks for artist "${artist_name}".`);
+        console.log(
+          `No similar tracks found for "${track_name}". Fetching top tracks for artist "${artist_name}".`
+        );
   
         const fallbackResponse = await fetch(
           `${LASTFM_API_BASE}?method=artist.getTopTracks&artist=${artist_name}&api_key=${LASTFM_API_KEY}&format=json&limit=${limit}`
         );
   
         const fallbackData = await fallbackResponse.json();
-  
-        // Ensure the result matches the limit
-        const topTracks = fallbackData.toptracks?.track.slice(0, limit) || [];
-        
-        // Fetch Spotify data for each track
-        const spotifyTracks = await Promise.all(
-          topTracks.map((track:any) => findSongs(track.name, authToken))
-        );
-  
-        return spotifyTracks.flat();
+        tracks = fallbackData.toptracks?.track || [];
+      } else {
+        tracks = data.similartracks.track || [];
       }
   
-      // If similar tracks are found, fetch Spotify data for each
-      const similarTracks = data.similartracks.track.slice(0, limit);
+      // Use Dutch National Flag Algorithm to remove duplicates by song name
+      const removeDuplicates = (tracks: any[]) => {
+        const uniqueNames = new Set<string>();
+        const distinctTracks = [];
+  
+        for (let i = 0; i < tracks.length; i++) {
+          if (!uniqueNames.has(tracks[i].name)) {
+            uniqueNames.add(tracks[i].name);
+            distinctTracks.push(tracks[i]);
+          }
+        }
+  
+        return distinctTracks;
+      };
+  
+      const uniqueTracks = removeDuplicates(tracks).slice(0, limit);
+  
+      // Fetch Spotify data for each unique track
       const spotifyTracks = await Promise.all(
-        similarTracks.map((track:any) => findSongs(track.name, authToken))
+        uniqueTracks.map((track: any) => findSongs(1,track.name, authToken))
       );
   
       return spotifyTracks.flat();
@@ -111,7 +122,10 @@ export const getRecommendations = async (
         console.log("Error getting Recommendations from Last.fm", err.message);
         throw err.message;
       } else {
-        console.log("Unknown Server Error getting Recommendations from Last.fm", err);
+        console.log(
+          "Unknown Server Error getting Recommendations from Last.fm",
+          err
+        );
         throw err;
       }
     }
@@ -173,7 +187,7 @@ export const getRecommendations = async (
 //     }
 // }
 
-export const findSongs = async (trackName: string, authToken: string) => {
+export const findSongs = async (limit:number,trackName: string, authToken: string) => {
     try {
         console.log("Track name in findSongs: ", trackName);
 
@@ -181,7 +195,7 @@ export const findSongs = async (trackName: string, authToken: string) => {
         const encodedTrackName = encodeURIComponent(trackName);
 
         // Fetch songs from Spotify API
-        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodedTrackName}&type=track&limit=10&include_external=audio`, {
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodedTrackName}&type=track&limit=${limit.toString()}&include_external=audio`, {
             headers: {
                 "Authorization": `Bearer ${authToken}`
             }

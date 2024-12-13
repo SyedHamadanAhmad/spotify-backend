@@ -17,7 +17,7 @@ export const getSongs=async(req:Request, res:Response): Promise<void>=>{
             res.status(401).json({ error: "Invalid authorization header format" });
             return;
         }
-        const songs=await findSongs(query, authToken)
+        const songs=await findSongs(10, query, authToken)
         let response:songData[]=[]
         for(let i=0; i<songs.length; i++){
             var song:songData={
