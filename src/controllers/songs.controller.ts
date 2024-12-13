@@ -51,9 +51,10 @@ export const getSongs=async(req:Request, res:Response): Promise<void>=>{
 
 export const recommendSong=async(req:Request, res:Response)=>{
     try{
-        const track_name=req.params.track_name;
         const artist_name=req.params.artist_name
+        const track_name=req.params.track_name;
         
+        console.log(artist_name, track_name)
         const authHeader = req.headers.authorization;
 
         if (!authHeader) {
@@ -68,26 +69,23 @@ export const recommendSong=async(req:Request, res:Response)=>{
             return;
         }
 
-        const songs=await getRecommendations(10, track_name,"oogabooga", authToken);
+        const songs=await getRecommendations(10, track_name,artist_name, authToken);
+        console.log(songs)
+        const response: songData[] = songs.map((song: any) => ({
+            track_name: song.name,
+            track_id: song.id,
+            album: song.album.name,
+            img: song.album.images[0]?.url || '', // Fallback if no image is available
+            artist: song.artists.map((artist: { name: string }) => artist.name).join(", "),
+            preview_url: song.preview_url || '', // Fallback if no preview URL is available
+        }));
         
-        // let response:songData[]=[]
-        // for(let i=0; i<songs.tracks.length; i++){
-        //     var song:songData={
-        //         track_name:songs.tracks[i].name,
-        //         track_id:songs.tracks[i].id,
-        //         album:songs.tracks[i].album.name,
-        //         img:songs.tracks[i].album.images[0].url,
-        //         artist: songs.tracks[i].artists.map((artist: { name: string }) => artist.name).join(", "),
-        //         preview_url:songs.tracks[i].preview_url
-
-        //     }
-           
-        //     response.push(song)
-        // }
+        // Log the transformed response to verify
+        console.log(response);
         
         res.status(200).json({
-            recommendations:"response"
-        })
+            recommendations: response,
+        });
     }
     catch(err){
         if(err instanceof Error){
