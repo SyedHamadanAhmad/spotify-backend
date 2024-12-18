@@ -132,8 +132,13 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         const followers = await getFollowers(user_id, authToken);
         
         const track_id=lastPlayed?.track_id
-        const track_name=lastPlayed?.name
-        const firstArtist = lastPlayed?.artist.split(',')[0].trim();
+        const track_name = lastPlayed?.name.split('(')[0].trim();
+        const artistString = lastPlayed?.artist;
+
+// Extract main artist before "feat."
+        const firstArtist = artistString?.split('feat.')[0].trim().split(/,\s*/)[0].trim();
+
+
         
        
         const recommendations = await getRecommendations(1, track_name, firstArtist, authToken);

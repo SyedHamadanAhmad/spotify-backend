@@ -66,6 +66,8 @@ export const getRecommendations = async (
     authToken: string
   ) => {
     try {
+        console.log("Track: ", track_name);
+        console.log("Artist: ", artist_name)
       const LASTFM_API_BASE = "https://ws.audioscrobbler.com/2.0/";
       const LASTFM_API_KEY =
         process.env.LASTFM_API_KEY || "b249c0d8d57a523d8e8be50c76151008";
