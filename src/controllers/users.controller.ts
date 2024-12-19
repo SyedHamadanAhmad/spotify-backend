@@ -144,13 +144,14 @@ export const getUserData = async (req: Request, res: Response): Promise<void> =>
         const recommendations = await getRecommendations(1, track_name, firstArtist, authToken);
        
         
-        let recommendedSongDetails;
-        for (let i = 0; i < recommendations.length; i++) {
-            if (recommendations[i].id !== track_id) {
-                recommendedSongDetails = recommendations[i];
-                break; // Exit the loop once you find a recommendation
-            }
-        }
+        let recommendedSongDetails=recommendations[0];
+        // for (let i = 0; i < recommendations.length; i++) {
+        //     if (recommendations[i].id !== track_id) {
+        //         recommendedSongDetails = recommendations[i];
+        //         break; // Exit the loop once you find a recommendation
+        //     }
+        // }
+        
         
         
         let recommendedSong = {
